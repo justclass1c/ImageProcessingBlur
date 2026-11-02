@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "./sequential.c"
+// #include "./sequential.c"
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image.h"
@@ -8,7 +8,8 @@
 
 int main() {
     int width, height, channels;
-    // temporary hardcoded blur radius value.
+
+    // default value
     // the idea is that the blur radius should be a square (3x3, 5x5, 7x7...)
     int radius = 1; 
     
@@ -92,6 +93,6 @@ int main() {
     stbi_write_png("output.png", width, height, 3, output, width * 3);
 
     // deallocate memory
-    stbi_image_free("input.png");
+    stbi_image_free(image);
     free(output);
 }
