@@ -1,8 +1,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image.h"
-#include "stb_image_write.h"
-#include "image.h"
+#include "../stb_image.h"
+#include "../stb_image_write.h"
+#include "../headers/image.h"
 
 int image_load(Image *image, const char *path, int desired_channels) {
     int file_channels = 0;
