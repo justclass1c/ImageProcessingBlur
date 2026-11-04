@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "image.h"
-#include "sequential_blur.h"
+#include "./headers/image.h"
+#include "./headers/sequential_blur.h"
 
 int main(void) {
     // default value
