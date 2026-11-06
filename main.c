@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "./headers/image.h"
 #include "./headers/sequential_blur.h"
+#include "./src/image.c"
 
 int main(void) {
     // default value
@@ -11,7 +12,7 @@ int main(void) {
     Image input = {0};
     Image output = {0};
 
-    if (image_load(&input, "input.png", 3) != 0) { // if image not found
+    if (loadImage(&input, "input.png") != 0) { // if image not found
         fprintf(stderr, "Error: %s \n", image_error()); // fprintf = printf in java
         return 0;
     }

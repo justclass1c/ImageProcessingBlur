@@ -8,9 +8,10 @@ typedef struct {
     unsigned char *pixels;
 } Image;
 
-int image_load(Image *image, const char *path, int desired_channels);
+int loadImage(Image *image, const char *path);
 void image_save_png(const char *path, const Image *image);
 void image_free(Image *image);
+int getImageNames();
 const char *image_error(void);
 
 #endif

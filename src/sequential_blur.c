@@ -1,4 +1,6 @@
-#include "sequential_blur.h"
+#include "../headers/sequential_blur.h"
+#include "../headers/image.h"
+#include "./image.c"
 
 void sequential_blur(const Image *src, Image *dst, int radius) {
     int width = src->width;
