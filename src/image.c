@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <stdio.h>
 #include <dirent.h>
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -25,30 +25,41 @@ void image_free(Image *image) {
     image->pixels = NULL;
 }
 
-int getImageNames() {
-    DIR *dir = opendir("image");
+int getImageNames(char imageNames[][MAX_NAME_LENGTH]) {
+    DIR *dir = opendir("images");
 
     if (!dir) {
         perror("opendir"); // print error with not found
-        return 1;
+        return -1;
     }
 
     struct dirent *entry;
     int imageCount = 0;
 
     while ((entry = readdir(dir)) != NULL) {
+        if (imageCount >= MAX_IMAGES) break;
+
         // skip . and .. directories
         if (entry -> d_name[0] == '.') {
             continue;
         }
 
-        imageCount++;
+        int character;
+        for (character = 0; character < MAX_NAME_LENGTH - 1; character++) {
+            imageNames[imageCount][character] = entry -> d_name[character];
+            if (entry -> d_name[character] == '\0') break;
+        }
+        imageNames[imageCount][character] = '\0';
 
-        printf("%d. %s", imageCount, entry->d_name);
+        imageCount++;
+    }
+
+    for (int i = 0; i < imageCount; i++) {
+        printf("%d. %s\n", i + 1, imageNames[i]);
     }
 
     closedir(dir);
-    return 0;
+    return imageCount;
 }
 
 const char *image_error(void) {

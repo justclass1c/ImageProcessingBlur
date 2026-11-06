@@ -1,10 +1,13 @@
 #include "../headers/sequential_blur.h"
 #include "../headers/image.h"
-#include "./image.c"
+#include "../headers/blur.h"
 
-void sequential_blur(const Image *src, Image *dst, int radius) {
+void sequential_blur(const Image *src, Image *dst, const BlurConfig *blur) {
     int width = src->width;
     int height = src->height;
+    int radius = blur -> diameter / 2;
+    int sample_count = blur -> sample_count;
+
     const unsigned char *image = src->pixels;
     unsigned char *output = dst->pixels;
 
@@ -39,9 +42,9 @@ void sequential_blur(const Image *src, Image *dst, int radius) {
             }
 
             // calculate average of rgb values
-            int average_r = sum_r / 9;
-            int average_g = sum_g / 9;
-            int average_b = sum_b / 9;
+            int average_r = sum_r / sample_count;
+            int average_g = sum_g / sample_count;
+            int average_b = sum_b / sample_count;
 
             // store rgb values for one pixel
             int output_pixel = (y * width + x) * 3;
