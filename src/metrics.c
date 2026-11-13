@@ -47,6 +47,8 @@ void metrics_summary(Metrics *seq_metrics, Metrics *par_metrics) {
         printf("Speedup: %f\n", par_metrics -> speedup);
         printf("Efficiency: %f\n", par_metrics -> efficiency);
     } 
+    
+    printf("\n\n\n");
 }
 
 void processOutput(Metrics *seq_metrics, Metrics *par_metrics) {
