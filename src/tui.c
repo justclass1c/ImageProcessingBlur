@@ -15,6 +15,16 @@ static const char *implementation_name(int option) {
     }
 }
 
+// discard the rest of the current input line after a failed scanf;
+// returns 1 if stdin reached EOF, meaning input can never succeed
+static int clear_input(void) {
+    int ch;
+    while ((ch = getchar()) != '\n') {
+        if (ch == EOF) return 1;
+    }
+    return 0;
+}
+
 int tui_configure(BlurConfig *config) {
     int imgIndex, option, strength;
     char imageNames[MAX_IMAGES][MAX_NAME_LENGTH];
@@ -27,52 +37,71 @@ int tui_configure(BlurConfig *config) {
         return 1;
     }
 
-    printf("Pick a corresponding image number (0 to exit): ");
-    if (scanf("%d", &imgIndex) != 1) {
-        return 1;
+    // invalid choices re-prompt instead of killing the program
+    for (;;) {
+        printf("Pick a corresponding image number (0 to exit): ");
+        if (scanf("%d", &imgIndex) != 1) {
+            fprintf(stderr, "Please enter a number.\n");
+            if (clear_input()) return 1;
+            continue;
+        }
+
+        // 0 signals the caller to exit the program
+        if (imgIndex == 0) {
+            config->implementation = 0;
+            return 0;
+        }
+
+        if (imgIndex < 1 || imgIndex > count) {
+            fprintf(stderr, "Invalid image number.\n");
+            continue;
+        }
+
+        break;
     }
 
-    // 0 signals the caller to exit the program
-    if (imgIndex == 0) {
-        config->implementation = 0;
-        return 0;
+    for (;;) {
+        printf("Pick an implementation:\n");
+        printf("0. Exit\n");
+        printf("1. Sequential\n");
+        printf("2. OpenMP\n");
+        printf("3. MPI\n");
+        printf("4. CUDA\n");
+        printf("> ");
+        if (scanf("%d", &option) != 1) {
+            fprintf(stderr, "Please enter a number.\n");
+            if (clear_input()) return 1;
+            continue;
+        }
+
+        // 0 signals the caller to exit the program
+        if (option == 0) {
+            config->implementation = 0;
+            return 0;
+        }
+
+        if (option < 1 || option > 4) {
+            fprintf(stderr, "Invalid implementation.\n");
+            continue;
+        }
+
+        break;
     }
 
-    if (imgIndex < 1 || imgIndex > count) {
-        fprintf(stderr, "Invalid image number.\n");
-        return 1;
-    }
+    for (;;) {
+        printf("Configure blur strength: ");
+        if (scanf("%d", &strength) != 1) {
+            fprintf(stderr, "Please enter a number.\n");
+            if (clear_input()) return 1;
+            continue;
+        }
 
-    printf("Pick an implementation:\n");
-    printf("0. Exit\n");
-    printf("1. Sequential\n");
-    printf("2. OpenMP\n");
-    printf("3. MPI\n");
-    printf("4. CUDA\n");
-    printf("> ");
-    if (scanf("%d", &option) != 1) {
-        return 1;
-    }
+        if (strength < 1) {
+            fprintf(stderr, "Strength must be at least 1.\n");
+            continue;
+        }
 
-    // 0 signals the caller to exit the program
-    if (option == 0) {
-        config->implementation = 0;
-        return 0;
-    }
-
-    if (option < 1 || option > 4) {
-        fprintf(stderr, "Invalid implementation.\n");
-        return 1;
-    }
-
-    printf("Configure blur strength: ");
-    if (scanf("%d", &strength) != 1) {
-        return 1;
-    }
-
-    if (strength < 1) {
-        fprintf(stderr, "Strength must be at least 1.\n");
-        return 1;
+        break;
     }
 
     snprintf(config->input_path, sizeof(config->input_path), "images/%s", imageNames[imgIndex - 1]);
