@@ -38,6 +38,41 @@
             "detail": "Compiles every C source (sequential + OpenMP) into main.exe; CUDA option 4 is not included."
         },
         {
+            "label": "Build (MPI)",
+            "type": "cppbuild",
+            "command": "C:\\msys64\\ucrt64\\bin\\mpicc.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-std=c11",
+                "-Wall",
+                "-Wextra",
+                "-O2",
+                "-fopenmp",
+                "-DUSE_MPI",
+                "-I.",
+                "-Iheaders",
+                "${workspaceFolder}\\main.c",
+                "${workspaceFolder}\\src\\image.c",
+                "${workspaceFolder}\\src\\sequential_blur.c",
+                "${workspaceFolder}\\src\\blur.c",
+                "${workspaceFolder}\\src\\tui.c",
+                "${workspaceFolder}\\src\\openmp_blur.c",
+                "${workspaceFolder}\\src\\metrics.c",
+                "${workspaceFolder}\\src\\mpi_blur.c",
+                "-o",
+                "${workspaceFolder}\\main.exe",
+                "-lm"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "Sequential + OpenMP + MPI. Needs MS-MPI and the MSYS2 msmpi package. Run with: mpiexec -n 4 main.exe"
+        },
+        {
             "label": "Build (CUDA)",
             "type": "shell",
             "command": "${workspaceFolder}\\build_cuda.bat",

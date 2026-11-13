@@ -1,21 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <omp.h>
 #include "./headers/blur.h"
 #include "./headers/cuda_blur.h"
 #include "./headers/image.h"
 #include "./headers/metrics.h"
+#include "./headers/mpi_blur.h"
 #include "./headers/openmp_blur.h"
 #include "./headers/sequential_blur.h"
 #include "./headers/tui.h"
 
-int main(void) {
+// in an MPI build only rank 0 runs this
+static int run_app(void) {
     BlurConfig blur = {0};
 
     // the metrics structs live outside the loop, so measurements
     // from earlier runs stay available for later comparisons
     Metrics seq_metrics = {0};
     Metrics openmp_metrics = {0};
+#ifdef USE_MPI
+    Metrics mpi_metrics = {0};
+#endif
 #ifdef USE_CUDA
     Metrics cuda_metrics = {0};
 #endif
@@ -104,13 +110,55 @@ int main(void) {
             return 1;
 #endif
 
-        /*
-        case 3:
+#ifdef USE_MPI
+        case 3: {
+            // separate baseline buffer, so it can be compared with the MPI result
+            size_t bytes = (size_t)output.width * output.height * output.channels;
+            Image baseline = output;
+            baseline.pixels = malloc(bytes);
+            if (baseline.pixels == NULL) {
+                fprintf(stderr, "Error: out of memory.\n");
+                image_free(&input);
+                free(output.pixels);
+                return 1;
+            }
+
+            seq_metrics.start = omp_get_wtime();
+            sequential_blur(&input, &baseline, &blur);
+            seq_metrics.end = omp_get_wtime();
+            seq_metrics.numberOfThreads = 1;
+
+            // timed including the send and gather
             mpi_metrics.start = omp_get_wtime();
-            mpi_blur(&input, &output, &blur);
+            if (mpi_blur(&input, &output, &blur) != 0) {
+                free(baseline.pixels);
+                image_free(&input);
+                free(output.pixels);
+                return 1;
+            }
             mpi_metrics.end = omp_get_wtime();
+            // processes, not threads
+            mpi_metrics.numberOfThreads = mpi_process_count();
+
+            printf("MPI processes: %d\n", mpi_process_count());
+            if (memcmp(baseline.pixels, output.pixels, bytes) == 0) {
+                printf("Correctness check: MPI output is identical to the sequential output.\n");
+            } else {
+                fprintf(stderr, "Correctness check FAILED: MPI output differs from the sequential output.\n");
+            }
+            free(baseline.pixels);
+
+            processOutput(&seq_metrics, &mpi_metrics);
             break;
-        */
+        }
+#else
+        case 3:
+            fprintf(stderr, "This build has no MPI support. Rebuild with: make clean, then make USE_MPI=1\n");
+            image_free(&input);
+            free(output.pixels);
+            return 1;
+#endif
+
         default:
             fprintf(stderr, "That implementation is not available yet.\n");
             image_free(&input);
@@ -132,4 +180,29 @@ int main(void) {
     }
 
     return 0;
+}
+
+int main(int argc, char **argv) {
+#ifdef USE_MPI
+    // ranks 1..N-1 are workers and never reach the menu
+    if (mpi_start(&argc, &argv) != 0) {
+        mpi_worker_loop();
+        mpi_shutdown();
+        return 0;
+    }
+
+    // stdout is a pipe under mpiexec; unbuffered so prompts show before input
+    setvbuf(stdout, NULL, _IONBF, 0);
+#else
+    (void)argc;
+    (void)argv;
+#endif
+
+    int status = run_app();
+
+#ifdef USE_MPI
+    mpi_shutdown();
+#endif
+
+    return status;
 }

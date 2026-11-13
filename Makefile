@@ -9,6 +9,13 @@ OMPFLAGS = -fopenmp
 # On Windows the CUDA version is built with build_cuda.bat (MSVC + nvcc).
 USE_CUDA ?= 0
 
+# Build with:  make clean, then make USE_MPI=1
+# Needs MPI installed: MS-MPI + the MSYS2 msmpi package on Windows, or
+# OpenMPI/MPICH on Linux. Run with:  mpiexec -n 4 ./main.exe
+# Run "make clean" when switching between a normal and an MPI build,
+# because main.o has to be recompiled with or without -DUSE_MPI.
+USE_MPI ?= 0
+
 ifeq ($(OS),Windows_NT)
 TARGET = main.exe
 else
@@ -31,12 +38,19 @@ NVCCFLAGS = -O2 -arch=native
 # If your toolkit is older than the GPU, use NVCCFLAGS="-O2 -arch=sm_89"
 endif
 
+ifeq ($(USE_MPI),1)
+# mpicc is gcc plus the MPI include path and library
+CC = mpicc
+CPPFLAGS += -DUSE_MPI
+OBJS += src/mpi_blur.o
+endif
+
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(OMPFLAGS) -o $@ $(LDLIBS)
 
-main.o: main.c headers/blur.h headers/cuda_blur.h headers/image.h headers/metrics.h headers/openmp_blur.h headers/sequential_blur.h headers/tui.h
+main.o: main.c headers/blur.h headers/cuda_blur.h headers/image.h headers/metrics.h headers/mpi_blur.h headers/openmp_blur.h headers/sequential_blur.h headers/tui.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c main.c -o $@
 
 src/image.o: src/image.c headers/image.h stb_image.h stb_image_write.h
@@ -57,12 +71,21 @@ src/openmp_blur.o: src/openmp_blur.c headers/openmp_blur.h headers/blur.h header
 src/metrics.o: src/metrics.c headers/metrics.h headers/image.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c src/metrics.c -o $@
 
+src/mpi_blur.o: src/mpi_blur.c headers/mpi_blur.h headers/blur.h headers/image.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c src/mpi_blur.c -o $@
+
 # nvcc compiles the kernel; main.o needs -DUSE_CUDA (set above) to enable case 4
 src/cuda_blur.o: src/cuda_blur.cu headers/cuda_blur.h headers/blur.h headers/image.h
 	$(NVCC) $(CPPFLAGS) $(NVCCFLAGS) -c src/cuda_blur.cu -o $@
 
+# A plain Windows prompt has no rm; MSYS2 and Linux do. In MSYS2 the "cmd /c"
+# line must not run: "/c" is rewritten to "C:\" and cmd opens interactively.
+ifeq ($(OS)$(MSYSTEM),Windows_NT)
+clean:
+	-cmd /c "del /Q /F $(TARGET) *.o src\*.o 2>NUL & if exist obj rmdir /s /q obj"
+else
 clean:
 	-rm -f $(TARGET) main main.exe main.o src/*.o src/cuda_blur.obj
-	-cmd /c "del /Q /F $(TARGET) *.o src\*.o 2>NUL & if exist obj rmdir /s /q obj"
+endif
 
 .PHONY: all clean
