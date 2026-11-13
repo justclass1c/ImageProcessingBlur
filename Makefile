@@ -5,14 +5,14 @@ LDLIBS = -lm
 OMPFLAGS = -fopenmp
 
 TARGET = main
-OBJS = main.o src/image.o src/sequential_blur.o src/blur.o src/tui.o src/openmp_blur.o
+OBJS = main.o src/image.o src/sequential_blur.o src/blur.o src/tui.o src/openmp_blur.o src/metrics.o
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(OMPFLAGS) -o $@ $(LDLIBS)
 
-main.o: main.c headers/blur.h headers/image.h headers/sequential_blur.h headers/tui.h
+main.o: main.c headers/blur.h headers/image.h headers/sequential_blur.h headers/tui.h headers/openmp_blur.h headers/metrics.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c main.c -o $@
 
 src/image.o: src/image.c headers/image.h stb_image.h stb_image_write.h
@@ -29,7 +29,11 @@ src/tui.o: src/tui.c headers/tui.h headers/blur.h headers/image.h
 
 src/openmp_blur.o: src/openmp_blur.c headers/openmp_blur.h headers/blur.h headers/image.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(OMPFLAGS) -c src/openmp_blur.c -o $@
+
+src/metrics.o: src/metrics.c headers/metrics.h headers/image.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c src/metrics.c -o $@
+
 clean:
-	rm -f main main.o src/image.o src/sequential_blur.o src/blur.o src/tui.o src/openmp_blur.o
+	rm -f main main.o src/image.o src/sequential_blur.o src/blur.o src/tui.o src/openmp_blur.o src/metrics.o
 
 .PHONY: all clean

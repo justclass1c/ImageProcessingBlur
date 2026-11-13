@@ -13,7 +13,7 @@ typedef struct {
 
 int loadImage(Image *image, const char *path);
 int getImageNames(char imageNames[][MAX_NAME_LENGTH]);
-void image_save_png(const char *path, const Image *image);
+int image_save_png(const char *path, const Image *image);
 void image_free(Image *image);
 const char *image_error(void);
 

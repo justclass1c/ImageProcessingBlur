@@ -1,7 +1,9 @@
 #include "../headers/openmp_blur.h"
 #include "../headers/image.h"
+#include <omp.h>
 
 void openmp_blur(const Image *src, Image *dst, const BlurConfig *blur) {
+
     int width = src->width;
     int height = src->height;
     int radius = blur -> diameter / 2;

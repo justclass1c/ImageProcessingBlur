@@ -7,11 +7,11 @@
 
 static const char *implementation_name(int option) {
     switch (option) {
-    case 1: return "sequential";
-    case 2: return "openmp";
-    case 3: return "mpi";
-    case 4: return "cuda";
-    default: return "unknown";
+        case 1: return "sequential";
+        case 2: return "openmp";
+        case 3: return "mpi";
+        case 4: return "cuda";
+        default: return "unknown";
     }
 }
 
@@ -27,9 +27,15 @@ int tui_configure(BlurConfig *config) {
         return 1;
     }
 
-    printf("Pick a corresponding image number: ");
+    printf("Pick a corresponding image number (0 to exit): ");
     if (scanf("%d", &imgIndex) != 1) {
         return 1;
+    }
+
+    // 0 signals the caller to exit the program
+    if (imgIndex == 0) {
+        config->implementation = 0;
+        return 0;
     }
 
     if (imgIndex < 1 || imgIndex > count) {
@@ -38,6 +44,7 @@ int tui_configure(BlurConfig *config) {
     }
 
     printf("Pick an implementation:\n");
+    printf("0. Exit\n");
     printf("1. Sequential\n");
     printf("2. OpenMP\n");
     printf("3. MPI\n");
@@ -45,6 +52,12 @@ int tui_configure(BlurConfig *config) {
     printf("> ");
     if (scanf("%d", &option) != 1) {
         return 1;
+    }
+
+    // 0 signals the caller to exit the program
+    if (option == 0) {
+        config->implementation = 0;
+        return 0;
     }
 
     if (option < 1 || option > 4) {
@@ -64,7 +77,7 @@ int tui_configure(BlurConfig *config) {
 
     snprintf(config->input_path, sizeof(config->input_path), "images/%s", imageNames[imgIndex - 1]);
 
-    // current local time, formatted as <dd-mm-yy>_<hh:mm>
+    // current local time, formatted as <dd-mm-yy>_<hh:mm:ss>
     time_t now = time(NULL);
     struct tm *local = localtime(&now);
     if (local == NULL) {
@@ -73,7 +86,7 @@ int tui_configure(BlurConfig *config) {
     }
 
     char timestamp[32];
-    if (strftime(timestamp, sizeof(timestamp), "%d-%m-%y_%H:%M", local) == 0) {
+    if (strftime(timestamp, sizeof(timestamp), "%d-%m-%y_%H:%M:%S", local) == 0) {
         fprintf(stderr, "Failed to format timestamp.\n");
         return 1;
     }

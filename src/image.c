@@ -1,5 +1,10 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 #include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../stb_image.h"
@@ -15,9 +20,36 @@ int loadImage(Image *image, const char *path) {
     return image->pixels == NULL;
 }
 
-void image_save_png(const char *path, const Image *image) {
-    stbi_write_png(path, image->width, image->height, image->channels,
-                   image->pixels, image->width * image->channels);
+int image_save_png(const char *path, const Image *image) {
+    // create the parent directory if it is missing, e.g. "output" for "output/...png"
+    // mkdir returns EEXIST when it is already there, which counts as success
+    const char *slash = strrchr(path, '/');
+    if (slash != NULL && slash != path) {
+        size_t dir_length = (size_t)(slash - path);
+        char directory[512];
+
+        if (dir_length >= sizeof(directory)) {
+            fprintf(stderr, "Error: directory path too long for '%s'\n", path);
+            return 1;
+        }
+
+        memcpy(directory, path, dir_length);
+        directory[dir_length] = '\0';
+
+        if (mkdir(directory, 0755) != 0 && errno != EEXIST) {
+            fprintf(stderr, "Error: cannot create directory '%s': %s\n", directory, strerror(errno));
+            return 1;
+        }
+    }
+
+    // stbi_write_png returns 0 on failure (e.g. missing directory, no disk space)
+    if (stbi_write_png(path, image->width, image->height, image->channels,
+                       image->pixels, image->width * image->channels) == 0) {
+        fprintf(stderr, "Error: failed to write '%s'\n", path);
+        return 1;
+    }
+
+    return 0;
 }
 
 void image_free(Image *image) {
