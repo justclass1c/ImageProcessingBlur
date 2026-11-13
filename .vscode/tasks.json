@@ -1,0 +1,54 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build (CPU / OpenMP)",
+            "type": "cppbuild",
+            "command": "C:\\msys64\\ucrt64\\bin\\gcc.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-std=c11",
+                "-Wall",
+                "-Wextra",
+                "-O2",
+                "-fopenmp",
+                "-I.",
+                "-Iheaders",
+                "${workspaceFolder}\\main.c",
+                "${workspaceFolder}\\src\\image.c",
+                "${workspaceFolder}\\src\\sequential_blur.c",
+                "${workspaceFolder}\\src\\blur.c",
+                "${workspaceFolder}\\src\\tui.c",
+                "${workspaceFolder}\\src\\openmp_blur.c",
+                "${workspaceFolder}\\src\\metrics.c",
+                "-o",
+                "${workspaceFolder}\\main.exe",
+                "-lm"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Compiles every C source (sequential + OpenMP) into main.exe; CUDA option 4 is not included."
+        },
+        {
+            "label": "Build (CUDA)",
+            "type": "shell",
+            "command": "${workspaceFolder}\\build_cuda.bat",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build",
+            "detail": "Compiles everything with MSVC + nvcc, including the CUDA implementation."
+        }
+    ]
+}

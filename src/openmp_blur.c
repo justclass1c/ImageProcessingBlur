@@ -12,10 +12,17 @@ void openmp_blur(const Image *src, Image *dst, const BlurConfig *blur) {
     const unsigned char *image = src->pixels;
     unsigned char *output = dst->pixels;
 
-#pragma omp parallel for collapse(2)
+    // MSVC only implements OpenMP 2.0, which does not have collapse()
+    // and requires the loop variables to be declared before the loop.
+    int x, y;
 
-    for (int x = 0; x < width; x++) {
-        for (int y = 0; y < height; y++) {
+#if defined(_MSC_VER)
+#pragma omp parallel for private(y)
+#else
+#pragma omp parallel for collapse(2)
+#endif
+    for (x = 0; x < width; x++) {
+        for (y = 0; y < height; y++) {
             int sum_r = 0, sum_g = 0, sum_b = 0;
 
             // dx and dy represents offset, affected by radius

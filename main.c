@@ -2,11 +2,12 @@
 #include <stdlib.h>
 #include <omp.h>
 #include "./headers/blur.h"
+#include "./headers/cuda_blur.h"
 #include "./headers/image.h"
+#include "./headers/metrics.h"
+#include "./headers/openmp_blur.h"
 #include "./headers/sequential_blur.h"
 #include "./headers/tui.h"
-#include "./headers/openmp_blur.h"
-#include "./headers/metrics.h"
 
 int main(void) {
     BlurConfig blur = {0};
@@ -15,8 +16,9 @@ int main(void) {
     // from earlier runs stay available for later comparisons
     Metrics seq_metrics = {0};
     Metrics openmp_metrics = {0};
-    Metrics mpi_metrics = {0};
+#ifdef USE_CUDA
     Metrics cuda_metrics = {0};
+#endif
 
     while (1) {
         if (tui_configure(&blur) != 0) {
@@ -57,7 +59,7 @@ int main(void) {
             break;
 
         case 2:
-            // sequential baseline, timed only — its pixels are overwritten
+            // sequential baseline, timed only: its pixels are overwritten
             // by the parallel run below, so the saved output is the parallel one
             seq_metrics.start = omp_get_wtime();
             sequential_blur(&input, &output, &blur);
@@ -72,17 +74,41 @@ int main(void) {
             processOutput(&seq_metrics, &openmp_metrics);
             break;
 
+#ifdef USE_CUDA
+        case 4:
+            // same pattern as OpenMP: timed sequential baseline first,
+            // then the GPU result, which is the one that gets saved
+            seq_metrics.start = omp_get_wtime();
+            sequential_blur(&input, &output, &blur);
+            seq_metrics.end = omp_get_wtime();
+            seq_metrics.numberOfThreads = 1;
+
+            cuda_metrics.start = omp_get_wtime();
+            if (cuda_blur(&input, &output, &blur) != 0) {
+                image_free(&input);
+                free(output.pixels);
+                return 1;
+            }
+            cuda_metrics.end = omp_get_wtime();
+            // GPU thread count is not comparable to CPU threads
+            cuda_metrics.numberOfThreads = 1;
+
+            processOutput(&seq_metrics, &cuda_metrics);
+            break;
+#else
+        case 4:
+            // the CUDA sources exist, but this binary was built without them
+            fprintf(stderr, "This build has no CUDA support. Run build_cuda.bat to rebuild.\n");
+            image_free(&input);
+            free(output.pixels);
+            return 1;
+#endif
+
         /*
         case 3:
             mpi_metrics.start = omp_get_wtime();
             mpi_blur(&input, &output, &blur);
             mpi_metrics.end = omp_get_wtime();
-            break;
-
-        case 4:
-            cuda_metrics.start = omp_get_wtime();
-            cuda_blur(&input, &output, &blur);
-            cuda_metrics.end = omp_get_wtime();
             break;
         */
         default:

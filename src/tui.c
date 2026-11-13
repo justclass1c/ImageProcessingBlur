@@ -106,7 +106,9 @@ int tui_configure(BlurConfig *config) {
 
     snprintf(config->input_path, sizeof(config->input_path), "images/%s", imageNames[imgIndex - 1]);
 
-    // current local time, formatted as <dd-mm-yy>_<hh:mm:ss>
+    // current local time, formatted as <dd-mm-yy>_<hh-mm-ss>.
+    // Colons are not allowed in Windows file names, so use dashes:
+    // the old "%H:%M:%S" format produced paths git cannot check out on Windows.
     time_t now = time(NULL);
     struct tm *local = localtime(&now);
     if (local == NULL) {
@@ -115,7 +117,7 @@ int tui_configure(BlurConfig *config) {
     }
 
     char timestamp[32];
-    if (strftime(timestamp, sizeof(timestamp), "%d-%m-%y_%H:%M:%S", local) == 0) {
+    if (strftime(timestamp, sizeof(timestamp), "%d-%m-%y_%H-%M-%S", local) == 0) {
         fprintf(stderr, "Failed to format timestamp.\n");
         return 1;
     }
