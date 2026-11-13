@@ -4,6 +4,7 @@
 #include "./headers/image.h"
 #include "./headers/sequential_blur.h"
 #include "./headers/tui.h"
+#include "./headers/openmp_blur.h"
 
 int main(void) {
     BlurConfig blur = {0};
@@ -33,11 +34,12 @@ int main(void) {
     case 1:
         sequential_blur(&input, &output, &blur);
         break;
-    /*
+
     case 2:
         openmp_blur(&input, &output, &blur);
         break;
 
+    /*
     case 3:
         mpi_blur(&input, &output, &blur);
         break;
@@ -53,7 +55,6 @@ int main(void) {
         return 1;
     }
 
-    // "width * 3" means 3 bytes per pixel here
     image_save_png(blur.output_path, &output);
 
     // deallocate memory
