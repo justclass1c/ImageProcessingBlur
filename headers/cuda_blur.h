@@ -4,7 +4,8 @@
 #include "image.h"
 #include "blur.h"
 
-/* nvcc compiles .cu files as C++, main.c is compiled as C.
+/* nvcc compiles the CUDA file as C++ (forced with -x cu even though the
+ * suffix is .c), main.c is compiled as C.
  * extern "C" keeps the symbol name the same for both, otherwise the
  * linker would look for two differently mangled functions. */
 #ifdef __cplusplus

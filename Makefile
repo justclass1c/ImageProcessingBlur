@@ -57,9 +57,10 @@ src/openmp_blur.o: src/openmp_blur.c headers/openmp_blur.h headers/blur.h header
 src/metrics.o: src/metrics.c headers/metrics.h headers/image.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c src/metrics.c -o $@
 
-# nvcc compiles the kernel; main.o needs -DUSE_CUDA (set above) to enable case 4
-src/cuda_blur.o: src/cuda_blur.cu headers/cuda_blur.h headers/blur.h headers/image.h
-	$(NVCC) $(CPPFLAGS) $(NVCCFLAGS) -c src/cuda_blur.cu -o $@
+# nvcc compiles the CUDA file; -x cu forces CUDA mode for the .c suffix.
+# main.o needs -DUSE_CUDA (set above) to enable case 4
+src/cuda_blur.o: src/cuda_blur.c headers/cuda_blur.h headers/blur.h headers/image.h
+	$(NVCC) $(CPPFLAGS) $(NVCCFLAGS) -x cu -c src/cuda_blur.c -o $@
 
 clean:
 	-rm -f $(TARGET) main main.exe main.o src/*.o src/cuda_blur.obj

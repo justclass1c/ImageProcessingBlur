@@ -55,7 +55,7 @@ cl %CFLAGS% /c src\metrics.c /Foobj\metrics.obj
 if errorlevel 1 goto :fail
 
 echo [2/3] Compiling CUDA kernel with nvcc...
-nvcc -O2 -arch=native -Xcompiler "/wd4819" -I. -Iheaders -c src\cuda_blur.cu -o obj\cuda_blur.obj
+nvcc -O2 -arch=native -Xcompiler "/wd4819" -I. -Iheaders -x cu -c src\cuda_blur.c -o obj\cuda_blur.obj
 if errorlevel 1 goto :fail
 
 echo [3/3] Linking main.exe...
