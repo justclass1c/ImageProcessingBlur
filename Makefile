@@ -76,7 +76,7 @@ src/mpi_blur.o: src/mpi_blur.c headers/mpi_blur.h headers/blur.h headers/image.h
 
 # nvcc compiles the kernel; main.o needs -DUSE_CUDA (set above) to enable case 4
 src/cuda_blur.o: src/cuda_blur.cu headers/cuda_blur.h headers/blur.h headers/image.h
-	$(NVCC) $(CPPFLAGS) $(NVCCFLAGS) -c src/cuda_blur.cu -o $@
+	$(NVCC) $(CPPFLAGS) $(NVCCFLAGS) -x cu src/cuda_blur.cu -o $@
 
 # A plain Windows prompt has no rm; MSYS2 and Linux do. In MSYS2 the "cmd /c"
 # line must not run: "/c" is rewritten to "C:\" and cmd opens interactively.
